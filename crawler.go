@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/jackdanger/collectlinks"
+	"github.com/jackdanger/collectlinks" // The collectlinks library is made for parsing links
 )
 
 func main() {
@@ -24,6 +24,7 @@ func main() {
 	queue := make(chan string)
 	filteredQueue := make(chan string)
 
+	// This go routine sends the arg supplied at the command line to the queue channel.
 	go func() { queue <- args[0] }()
 	go filterQueue(queue, filteredQueue)
 
@@ -33,6 +34,7 @@ func main() {
 	}
 }
 
+// filterQueue makes sure a link is not crawled twice
 func filterQueue(in chan string, out chan string) {
 	var seen = make(map[string]bool)
 	for val := range in {
@@ -43,6 +45,8 @@ func filterQueue(in chan string, out chan string) {
 	}
 }
 
+// enqueue retrieves HTTP and parses the links, putting them into the same queue
+// used by main
 func enqueue(uri string, queue chan string) {
 	fmt.Println("fetching", uri)
 	transport := &http.Transport{
@@ -50,6 +54,7 @@ func enqueue(uri string, queue chan string) {
 			InsecureSkipVerify: true,
 		},
 	}
+
 	client := http.Client{Transport: transport}
 	resp, err := client.Get(uri)
 	if err != nil {
@@ -72,6 +77,7 @@ func enqueue(uri string, queue chan string) {
 	}
 }
 
+// fixUrl makes sure that the link being visited is a relative link
 func fixUrl(href, base string) string {
 	uri, err := url.Parse(href)
 	if err != nil {
