@@ -16,6 +16,7 @@ type Profile struct {
 	LastUpdated time.Time
 }
 
+// Creating a user profile.
 var tunde = &Profile{
 	Name:        "tunde",
 	Password:    "akerele",
@@ -31,14 +32,18 @@ var saheed = &Profile{
 }
 
 func main() {
-
+	// Adding a profile to the database
 	tunde.CreateOrUpdateProfile()
 	saheed.CreateOrUpdateProfile()
+
+	// Get all profiles in the Profiles collection.
 	GetProfiles()
+
+	// Get a profille from the Profiles collection.
 	ReadProfile(tunde.Name)
 }
 
-// GetProfiles - Returns all the profile in the Profiles Collection
+// GetProfiles returns all the profile in the Profiles Collection
 func GetProfiles() []Profile {
 	session, err := mgo.Dial("localhost:27017")
 	if err != nil {
@@ -46,9 +51,6 @@ func GetProfiles() []Profile {
 		return nil
 	}
 	defer session.Close()
-
-	// Switch the session to a monotonic behavior.
-	session.SetMode(mgo.Monotonic, true)
 
 	c := session.DB("ProfileService").C("Profiles")
 	var profiles []Profile
@@ -66,8 +68,6 @@ func ReadProfile(id string) Profile {
 	}
 	defer session.Close()
 
-	session.SetMode(mgo.Monotonic, true)
-
 	c := session.DB("ProfileService").C("Profiles")
 	profile := Profile{}
 	err = c.Find(bson.M{"name": id}).One(&profile)
@@ -84,15 +84,13 @@ func DeleteProfile(id string) bool {
 	}
 	defer session.Close()
 
-	session.SetMode(mgo.Monotonic, true)
-
 	c := session.DB("ProfileService").C("Profiles")
 	err = c.RemoveId(id)
 
 	return true
 }
 
-// CreateOrUpdateProfile Creates or Updates (Upsert) the profile in the Profiles Collection with id parameter
+// CreateOrUpdateProfile Creates or Updates the profile in the Profiles Collection with id parameter
 func (p *Profile) CreateOrUpdateProfile() bool {
 	session, err := mgo.Dial("localhost:27017")
 	if err != nil {
@@ -100,8 +98,6 @@ func (p *Profile) CreateOrUpdateProfile() bool {
 		return false
 	}
 	defer session.Close()
-
-	session.SetMode(mgo.Monotonic, true)
 
 	c := session.DB("ProfileService").C("Profiles")
 	_, err = c.UpsertId(p.Name, p)
